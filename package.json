@@ -1,0 +1,6 @@
+{
+  "type": "module",
+  "dependencies": {
+    "mongoose-type-url": "^1.0.4"
+  }
+}
