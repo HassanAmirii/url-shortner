@@ -14,6 +14,11 @@ const urlSchema = new mongoose.Schema(
       lowercase: true,
       trim: true,
     },
+    accessCount: {
+      type: Number,
+      defalt: 0,
+      required: true,
+    },
   },
   { timestamps: true },
 );
