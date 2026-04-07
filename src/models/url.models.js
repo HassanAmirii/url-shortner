@@ -1,5 +1,6 @@
 import mongoose from "mongoose";
 import "mongoose-type-url";
+import { generateStrings } from "../utils/generator.utils";
 const urlSchema = new mongoose.Schema(
   {
     longUrl: {
@@ -13,10 +14,12 @@ const urlSchema = new mongoose.Schema(
       unique: true,
       lowercase: true,
       trim: true,
+      minlength: 4,
+      maxlength: 4,
     },
     accessCount: {
       type: Number,
-      defalt: 0,
+      default: 0,
       required: true,
     },
   },
@@ -24,16 +27,6 @@ const urlSchema = new mongoose.Schema(
 );
 
 urlSchema.pre("save", async function () {
-  function generateStrings(length) {
-    const characters =
-      "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-    const charLength = characters.length;
-    let randomStr = "";
-    for (let i = 0; i < length; i++) {
-      randomStr += characters[Math.floor(Math.random() * charLength)];
-    }
-    return randomStr;
-  }
   if (!this.shortCode) {
     this.shortCode = generateStrings(4);
   }
