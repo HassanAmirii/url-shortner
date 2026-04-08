@@ -1,11 +1,11 @@
-import Url from "../models/url.models";
-import { generateStrings } from "../../utils/generator.utils";
+import Url from "../models/url.models.js";
+import { generateStrings } from "../utils/generator.utils.js";
 
 //create new shortcode url
 export const createUrl = async (req, res, next) => {
   try {
     const { longUrl } = req.body;
-    const newUrl = await new Url.create({
+    const newUrl = await Url.create({
       longUrl,
     });
     return res.status(201).json({ success: true, newUrl });
@@ -56,14 +56,18 @@ export const deleteUrl = async (req, res, next) => {
 export const getUrl = async (req, res, next) => {
   const { shortCode } = req.params;
   try {
-    const getMatchingUrl = await Url.findOne({ shortCode });
-    if (!getMatchingUrl) {
+    const updatedUrl = await Url.findOneAndUpdate(
+      { shortCode },
+      { $inc: { accessCount: 1 } },
+      { new: true, runValidators: true },
+    );
+    if (!updatedUrl) {
       return res.status(404).json({
         success: false,
         message: "provided short code doesnt exist",
       });
     }
-    return res.status(200).json({ success: true, getMatchingUrl });
+    return res.status(200).json({ success: true, updatedUrl });
   } catch (err) {
     next(err);
   }

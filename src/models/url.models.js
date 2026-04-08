@@ -1,6 +1,6 @@
 import mongoose from "mongoose";
 import "mongoose-type-url";
-import { generateStrings } from "../utils/generator.utils";
+import { generateStrings } from "../utils/generator.utils.js";
 const urlSchema = new mongoose.Schema(
   {
     longUrl: {
