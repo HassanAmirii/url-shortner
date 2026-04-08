@@ -160,7 +160,3 @@ curl -X POST http://localhost:3000/api/create-url \
 Get (after updating route to include :shortCode):
 
 curl http://localhost:3000/api/get-url/abcd
-
-## License
-
-ISC (or your preferred license; update this section if needed).
