@@ -1,162 +1,139 @@
 # URL Shortener API
 
-A simple Node.js + Express + MongoDB URL shortener service.
+- **URL Shortening**: Easily convert long, unwieldy URLs into concise, 7-character short codes.
+- **Custom Short Code Generation**: Automatically generates unique, alphanumeric short codes for new URLs.
+- **URL Redirection**: When a short code is accessed, users are seamlessly redirected to the original long URL.
+- **Access Tracking**: Automatically keeps a count of how many times each shortened URL has been accessed.
+- **Short Code Updates**: Change an existing short code to a new, randomly generated one if needed.
+- **URL Deletion**: Remove short URLs and their associated data when they're no longer required.
+- **Robust Error Handling**: Provides clear error messages for validation failures, duplicate entries, and other issues.
 
-![System flow](assets/urlshortner_flow.png)
+## Getting Started
 
-Image source: roadmap.sh
+### Environment Variables
 
-## Overview
+You'll need to set up a few environment variables for the project to run correctly. Create a `.env` file in the root of the project based on the `.env.example` file:
 
-This API allows you to:
-
-- Create a short code for a long URL
-- Retrieve a URL entry by short code
-- Update an existing short code
-- Delete a URL entry
-- Track access count for each short URL
-
-## Tech Stack
-
-- Node.js (ESM modules)
-- Express
-- MongoDB + Mongoose
-- mongoose-type-url
-- dotenv
-
-## Project Structure
-
-```
-.
-├── assets/
-├── src/
-│   ├── app.js
-│   ├── server.js
-│   ├── controllers/
-│   │   └── url.controllers.js
-│   ├── models/
-│   │   └── url.models.js
-│   └── routes/
-│       └── url.routes.js
-├── utils/
-│   └── generator.utils.js
-└── package.json
+```example
+APP_ENV=development
+PORT=3000
+MONGO_URI=mongodb://get your uri from mongodb atlas
+JWT_SECRET=thisisasecretkeyforjwtauthentications
+FRONTEND_URL=https://yourfrontendurl.com
 ```
 
-## Prerequisites
+- `APP_ENV`: Set to `development` for detailed error stacks, or `production` for concise error messages.
+- `PORT`: The port your server will run on. Default is `3000`.
+- `MONGO_URI`: Your MongoDB connection string. Get this from MongoDB Atlas or your local MongoDB setup.
+- `JWT_SECRET`: A secret key for any potential JWT authentication (though not fully implemented in this version, it's used in the error handler).
+- `FRONTEND_URL`: The URL of your frontend application, if you have one (used for CORS configuration).
 
-- Node.js 20+
-- MongoDB connection string
+## Usage
 
-## Installation
+To get the server up and running, first make sure you have all the dependencies installed.
 
-1. Install dependencies:
+```bash
+npm install
+```
 
-   npm install
+Once installed, you can start the server:
 
-2. Create an environment file in the project root:
-
-   .env
-
-3. Add the required variables:
-
-   PORT=3000
-   MONGO_URI=your_mongodb_connection_string
-   APP_ENV=development
-
-## Run
-
-Start the server:
-
+```bash
 npm start
+```
 
-Expected startup logs:
+The server will connect to your MongoDB database and then start listening on the port you configured (default: `3000`). You should see messages like `db connected succesfully` and `server running on port 3000` in your console.
 
-- db connected succesfully
-- server running on port 3000
+Here's how you can interact with the API:
 
-## API Endpoints
+### Create a new short URL
 
-Base prefix: /api
+Send a POST request with the `longUrl` you want to shorten.
+**Endpoint**: `POST /api/create-url`
 
-### 1) Create Short URL
+```bash
+curl -X POST -H "Content-Type: application/json" -d '{"longUrl": "https://www.example.com/very/long/url/that/needs/shortening"}' http://localhost:3000/api/create-url
+```
 
-- Method: POST
-- Path: /api/create-url
-- Body:
+**Example Response**:
 
-  {
-  "longUrl": "https://example.com/some/very/long/path"
+```json
+{
+  "success": true,
+  "newUrl": {
+    "longUrl": "https://www.example.com/very/long/url/that/needs/shortening",
+    "shortCode": "AbCdEfG",
+    "accessCount": 0,
+    "_id": "65b9a8e0f9c2d1e3a4b5c6d7",
+    "createdAt": "2024-01-31T12:00:00.000Z",
+    "updatedAt": "2024-01-31T12:00:00.000Z",
+    "__v": 0
   }
+}
+```
 
-- Success response: 201
+### Retrieve and Redirect a URL
 
-### 2) Update Short Code
+Accessing the short code directly will redirect you to the original long URL and increment its access count.
+**Endpoint**: `GET /api/get-url/:shortCode`
 
-- Method: PUT
-- Path currently registered: /api/update-url-code
-- Controller expects: req.params.shortCode
+```bash
+# In your browser, navigate to:
+# http://localhost:3000/api/get-url/AbCdEfG
 
-Recommended route shape:
+# Or using curl, which will follow the redirect:
+curl -L http://localhost:3000/api/get-url/AbCdEfG
+```
 
-- /api/update-url-code/:shortCode
+### Update a short code
 
-### 3) Get URL By Short Code
+Change an existing short code to a new, randomly generated one.
+**Endpoint**: `PUT /api/update-url-code/:shortCode`
 
-- Method: GET
-- Path currently registered: /api/get-url
-- Controller expects: req.params.shortCode
+```bash
+curl -X PUT http://localhost:3000/api/update-url-code/AbCdEfG
+```
 
-Recommended route shape:
+**Example Response**:
 
-- /api/get-url/:shortCode
+```json
+{
+  "success": true,
+  "updatedUrl": {
+    "longUrl": "https://www.example.com/very/long/url/that/needs/shortening",
+    "shortCode": "hIjKlMn",
+    "accessCount": 10,
+    "_id": "65b9a8e0f9c2d1e3a4b5c6d7",
+    "createdAt": "2024-01-31T12:00:00.000Z",
+    "updatedAt": "2024-01-31T12:30:00.000Z",
+    "__v": 0
+  }
+}
+```
 
-### 4) Delete URL By Short Code
+### Delete a URL
 
-- Method: DELETE
-- Path currently registered: /api/delete-url
-- Controller expects: req.params.shortCode
+Remove a short URL entry from the database.
+**Endpoint**: `DELETE /api/delete-url/:shortCode`
 
-Recommended route shape:
+```bash
+curl -X DELETE http://localhost:3000/api/delete-url/hIjKlMn
+```
 
-- /api/delete-url/:shortCode
+**Example Response**:
 
-## Data Model
-
-Collection: Url
-
-- longUrl: URL, required
-- shortCode: String (length 4), unique
-- accessCount: Number, default 0
-- createdAt / updatedAt: timestamps
-
-## Error Handling
-
-Global error middleware in src/app.js handles:
-
-- Validation errors (400)
-- Duplicate key errors (409)
-- JWT errors (401)
-- Fallback internal errors (500)
-
-## Known Issues To Fix
-
-1. Route params mismatch:
-
-   update/get/delete handlers read req.params.shortCode, but routes are currently defined without :shortCode.
-
-2. Relative import path to generator utility:
-
-   Because utils is outside src, imports from src/models and src/controllers should reference ../../utils/generator.utils.js.
-
-## Quick Test With curl
-
-Create:
-
-curl -X POST http://localhost:3000/api/create-url \
- -H "Content-Type: application/json" \
- -d '{"longUrl":"https://example.com"}'
-
-Get (after updating route to include :shortCode):
-
-curl http://localhost:3000/api/get-url/abcd
+```json
+{
+  "success": true,
+  "message": "deleted url",
+  "deletedUrl": {
+    "longUrl": "https://www.example.com/very/long/url/that/needs/shortening",
+    "shortCode": "hIjKlMn",
+    "accessCount": 10,
+    "_id": "65b9a8e0f9c2d1e3a4b5c6d7",
+    "createdAt": "2024-01-31T12:00:00.000Z",
+    "updatedAt": "2024-01-31T12:30:00.000Z",
+    "__v": 0
+  }
+}
+```
