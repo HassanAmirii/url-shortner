@@ -1,6 +1,6 @@
 import Url from "../models/url.models.js";
 import { generateStrings } from "../utils/generator.utils.js";
-
+const length = 7;
 //create new shortcode url
 export const createUrl = async (req, res, next) => {
   try {
@@ -18,7 +18,7 @@ export const createUrl = async (req, res, next) => {
 export const updateShortUrl = async (req, res, next) => {
   try {
     const { shortCode } = req.params;
-    const newCode = generateStrings(4);
+    const newCode = generateStrings(length);
     const updatedUrl = await Url.findOneAndUpdate(
       { shortCode: shortCode },
       { shortCode: newCode },
@@ -46,7 +46,9 @@ export const deleteUrl = async (req, res, next) => {
         message: "provided short code doesnt exist",
       });
     }
-    return res.status(204).send();
+    return res
+      .status(200)
+      .json({ success: true, message: "deleted url", deletedUrl });
   } catch (err) {
     next(err);
   }
@@ -67,7 +69,7 @@ export const getUrl = async (req, res, next) => {
         message: "provided short code doesnt exist",
       });
     }
-    return res.status(200).json({ success: true, updatedUrl });
+    return res.redirect(updatedUrl.longUrl);
   } catch (err) {
     next(err);
   }

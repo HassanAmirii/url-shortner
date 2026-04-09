@@ -14,8 +14,8 @@ const urlSchema = new mongoose.Schema(
       unique: true,
       lowercase: true,
       trim: true,
-      minlength: 4,
-      maxlength: 4,
+      minlength: 7,
+      maxlength: 7,
     },
     accessCount: {
       type: Number,
@@ -27,8 +27,9 @@ const urlSchema = new mongoose.Schema(
 );
 
 urlSchema.pre("save", async function () {
+  const length = 7;
   if (!this.shortCode) {
-    this.shortCode = generateStrings(4);
+    this.shortCode = generateStrings(length);
   }
 });
 
